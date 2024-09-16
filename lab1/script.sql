@@ -9,7 +9,7 @@ DECLARE
 BEGIN
     SELECT current_user INTO current_user;
 
-    target_user := <target_user>;
+    target_user := '<target_user>';
 
     SELECT EXISTS (
         SELECT 1
@@ -22,7 +22,6 @@ BEGIN
         RETURN;
     END IF;
 
-
     RAISE NOTICE 'Current user: %', current_user;
     RAISE NOTICE 'User to grant access rights: %', target_user;
     RAISE NOTICE 'No. Table name';
@@ -32,12 +31,22 @@ BEGIN
         SELECT tablename
         FROM pg_tables
         WHERE schemaname = current_user
-          AND EXISTS (
-              SELECT 1
-              FROM pg_class c
-              JOIN pg_roles r ON c.relowner = r.oid
-              WHERE c.relname = pg_tables.tablename
-                AND r.rolname = current_user
+          AND (
+              EXISTS (
+                  SELECT 1
+                  FROM pg_class c
+                  JOIN pg_roles r ON c.relowner = r.oid
+                  WHERE c.relname = pg_tables.tablename
+                    AND r.rolname = current_user
+              )
+              OR EXISTS (
+                  SELECT 1
+                  FROM information_schema.role_table_grants g
+                  WHERE g.grantee = current_user
+                    AND g.privilege_type = 'GRANT OPTION'
+                    AND g.table_name = pg_tables.tablename
+                    AND g.table_schema = pg_tables.schemaname
+              )
           )
     LOOP
         RAISE NOTICE '% %', row_number, table_name;

@@ -18,7 +18,7 @@ def run_sql_script(current_user, target_user, sql_script):
         with open(sql_script, 'r') as file:
             sql_content = file.read()
 
-        sql_content = sql_content.replace('<target_user>', "\'"+target_user+"\'")
+        sql_content = sql_content.replace('<target_user>', target_user)
 
         temp_sql_script = f'/tmp/{os.path.basename(sql_script)}'
         with open(temp_sql_script, 'w') as file:
